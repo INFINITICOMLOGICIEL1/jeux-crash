@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu Crash</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #1c1c2c; /* Bleu nuit */
+            color: white;
+        }
+        #multiplier {
+            font-size: 50px;
+            margin: 20px 0;
+        }
+        #message, #balanceMessage {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #0056b3; /* Bleu ciel */
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #007bff; /* Couleur de survol */
+        }
+        #bet-input, #rechargeAmount, #withdrawAmount {
+            font-size: 18px;
+            padding: 10px;
+            width: 150px;
+            margin: 10px 0;
+        }
+        #rechargeSection, #withdrawSection, #accountSection {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        /* Styles des fenêtres modales */
+        .modal {
+            display: none; /* Cacher par défaut */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fond semi-transparent */
+        }
+        .modal-content {
+            background-color: #2c2c4d; /* Bleu clair pour le contenu des modales */
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+        }
+        .close {
+            color: red;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* Masquer le jeu au démarrage */
+        #gameSection {
+            display: none;
+        }
+        /* Styles pour l'espace utilisateur */
+        #userArea {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="userArea">
+        <span id="userName">Joueur</span>👤 <img👤 src="👤" alt="User Icon" width="30" height="30">
+    </div>
+
+    <!-- Section de jeu masquée par défaut -->
+    <div id="gameSection">
+        <h1>Jeu Crash</h1>
+        
+       
+
+        <div id="multiplier">1x</div>
+
+        <button id="betButton" onclick="placeBet()">PARIER</button>
+        <button id="cashoutButton" onclick="cashOut()" disabled>PRENDRE MON GAIN</button>
+        
+        <div id="message"></div>
+        <div id="balanceMessage"></div>
+        <div>
+            <label for="betAmount">Montant de la mise (€) :</label>
+            <input type="number" id="betAmount" value="10" min="1" step="1">
+            <button onclick="betAll()">Tout Miser</button>
+        </div>
+        <!-- Section de Rechargement -->
+        <div id="rechargeSection">
+            <h2>Recharger votre Compte</h2>
+            <button onclick="openRechargeModal()">Recharger via Wave</button>
+            <div id="rechargeMessage"></div>
+        </div>
+
+        <!-- Section de Retrait -->
+        <div id="withdrawSection">
+            <h2>Retirer des fonds</h2>
+            <button onclick="openWithdrawModal()">Retirer via Wave</button>
+            <div id="withdrawMessage"></div>
+        </div>
+    </div>
+
+    <!-- Section de compte -->
+    <div id="accountSection">
+        <h2>Créer ou Se Connecter</h2>
+        <button onclick="openAccountModal()">Créer un Compte / Se Connecter</button>
+        <div id="accountMessage"></div>
+    </div>
+
+    <!-- Modal de création de compte -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAccountModal()">&times;</span>
+            <h2>Créer un Compte / Se Connecter</h2>
+            <label for="phone">Numéro de téléphone :</label>
+            <input type="text" id="phone" placeholder="Entrer votre numéro">
+            <br><br>
+            <label for="email">Gmail :</label>
+            <input type="email" id="email" placeholder="Entrer votre Gmail">
+            <br><br>
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" placeholder="Entrer votre mot de passe">
+            <br><br>
+            <button onclick="createAccount()">Créer un Compte</button>
+            <button onclick="login()">Se Connecter</button>
+            <div id="loginMessage"></div>
+        </div>
+    </div>
+    <!-- Modal de rechargement -->
+    <div id="rechargeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRechargeModal()">&times;</span>
+            <h2>Rechargement</h2>
+            <label for="rechargePhone">Numéro de téléphone :</label>
+            <input type="text" id="rechargePhone" placeholder="Entrer votre numéro">
+            <br><br>
+            <label for="rechargePassword">Mot de passe Wave :</label>
+            <input type="password" id="rechargePassword" placeholder="Entrer votre mot de passe">
+            <br><br>
+            <label for="rechargeAmount">Montant à recharger (€) :</label>
+            <input type="number" id="rechargeAmount" min="1" step="1">
+            <br><br>
+            <button onclick="confirmRecharge()">Confirmer le Rechargement</button>
+        </div>
+    </div>
+
+    <!-- Modal de retrait -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeWithdrawModal()">&times;</span>
+            <h2>Retrait</h2>
+            <label for="withdrawPhone">Numéro de téléphone :</label>
+            <input type="text" id="withdrawPhone" placeholder="Entrer votre numéro">
+            <br><br>
+            <label for="withdrawAmount">Montant à retirer (€) :</label>
+            <input type="number" id="withdrawAmount" min="1" step="1">
+            <br><br>
+            <button onclick="confirmWithdraw()">Confirmer le Retrait</button>
+        </div>
+    </div>
+
+    <script>
+        let multiplier = 1;
+        let isPlaying = false;
+        let interval;
+        let crashPoint = Math.random() * 1 + 1; // Génère un point de crash aléatoire entre 1 et 20 favorise les pertes
+        let betAmount = 0;
+        let user = null; // Utilisateur actuel
+
+        function updateBalanceDisplay() {
+            document.getElementById("balanceMessage").innerText = "Solde : " + balance.toFixed(1) + " €";
+        }
+
+        function startGame() {
+            multiplier = 1; // Réinitialiser le multiplicateur au début du jeu
+            crashPoint = Math.random(920) *10 +0 ; // Génère un nouveau point de crash favorisant les pertes
+            document.getElementById("multiplier").innerText = multiplier.toFixed(1) + "x";
+
+            interval = setInterval(() => {
+                multiplier += 0.1;
+                document.getElementById("multiplier").innerText = multiplier.toFixed(1) + "x";
+
+                // Gestion du crash
+                if (multiplier >= crashPoint) {
+                    endGame(true); // Indiquer que le jeu a crash
+                }
+            }, 100); // Actualise toutes les 100 millisecondes
+        }
+
+        function placeBet() {
+            if (!isPlaying) {
+                betAmount = parseFloat(document.getElementById("betAmount").value);
+                if (betAmount >= 1 && betAmount <= balance) {
+                    balance -= betAmount; // Déduire la mise du solde
+                    updateBalanceDisplay();
+                    isPlaying = true;
+                    startGame();
+                    document.getElementById("betButton").disabled = true;
+                    document.getElementById("cashoutButton").disabled = false;
+                    document.getElementById("accountSection").style.display = "none"; // Masquer la section de compte
+                    document.getElementById("gameSection").style.display = "block"; // Afficher la section de jeu
+                } else {
+                    alert("Montant de mise invalide. La mise minimale est de 1 € !");
+                }
+            }
+        }
+
+        function endGame(hasCrashed) {
+            clearInterval(interval);
+            isPlaying = false;
+            document.getElementById("betButton").disabled = false;
+            document.getElementById("cashoutButton").disabled = true;
+
+            // Si le joueur n'a pas cash out, il perd la mise
+            if (hasCrashed) {
+                document.getElementById("message").innerText = "Crash ! Vous avez perdu votre mise.";
+            } else {
+                let winnings = betAmount * multiplier; // Calcul des gains
+                balance += winnings; // Ajouter les gains au solde
+                document.getElementById("message").innerText = "Vous avez cash out à " + multiplier.toFixed(1) + "x !";
+                updateBalanceDisplay(); // Mettre à jour l'affichage du solde
+            }
+        }
+
+        function cashOut() {
+            if (isPlaying) {
+                endGame(false); // Finir le jeu sans crash
+            }
+        }
+
+        function betAll() {
+            if (!isPlaying && balance > 0) {
+                document.getElementById("betAmount").value = balance; // Mettre la mise à la valeur du solde
+            }
+        }
+
+        // Fonctions pour la gestion des modales
+        function openAccountModal() {
+            document.getElementById("accountModal").style.display = "block";
+        }
+
+        function closeAccountModal() {
+            document.getElementById("accountModal").style.display = "none";
+        }
+
+        function openRechargeModal() {
+            document.getElementById("rechargeModal").style.display = "block";
+        }
+
+        function closeRechargeModal() {
+            document.getElementById("rechargeModal").style.display = "none";
+        }
+
+        function openWithdrawModal() {
+            document.getElementById("withdrawModal").style.display = "block";
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById("withdrawModal").style.display = "none";
+        }
+
+        // Fonctions pour la gestion du compte
+        function createAccount() {
+            // Logic to create an account
+            user = {
+                phone: document.getElementById("phone").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                balance: 0 // Solde initial
+            };
+            balance = user.balance; // Mettre à jour le solde
+            updateBalanceDisplay();
+            document.getElementById("loginMessage").innerText = "Compte créé avec succès !";
+            closeAccountModal();
+        }
+
+        function login() {
+            // Logic to log in
+            user = {
+                phone: document.getElementById("phone").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value,
+                balance: 0 // Pour simuler une connexion
+            };
+            balance = user.balance; // Mettre à jour le solde
+            updateBalanceDisplay();
+            document.getElementById("loginMessage").innerText = "Connexion réussie !";
+            document.getElementById("accountSection").style.display = "none"; // Masquer la section de compte
+            document.getElementById("gameSection").style.display = "block"; // Afficher la section de jeu
+            document.getElementById("userName").innerText = user.phone; // Afficher le nom de l'utilisateur
+            closeAccountModal();
+        }
+
+        function confirmRecharge() {
+            const amount = parseFloat(document.getElementById("rechargeAmount").value);
+            if (amount > 0) {
+                balance += amount; // Ajouter le montant rechargé au solde
+                updateBalanceDisplay();
+                document.getElementById("rechargeMessage").innerText = "Rechargement réussi !";
+                closeRechargeModal();
+            } else {
+                document.getElementById("rechargeMessage").innerText = "Montant invalide.";
+            }
+        }
+
+        function confirmWithdraw() {
+            const amount = parseFloat(document.getElementById("withdrawAmount").value);
+            if (amount > 0 && amount <= balance) {
+                balance -= amount; // Déduire le montant du solde
+                updateBalanceDisplay();
+                document.getElementById("withdrawMessage").innerText = "Retrait réussi !";
+                closeWithdrawModal();
+            } else {
+                document.getElementById("withdrawMessage").innerText = "Montant invalide.";
+            }
+        }
+
+        // Initialisation
+        updateBalanceDisplay(); // Affiche le solde initial
+    </script>
+</body>
+</html>
